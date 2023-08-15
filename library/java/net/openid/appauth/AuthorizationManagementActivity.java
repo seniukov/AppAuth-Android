@@ -27,6 +27,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import net.openid.appauth.AuthorizationException.AuthorizationRequestErrors;
 import net.openid.appauth.internal.Logger;
+import net.openid.appauth.serial.Stringifier;
+
 import org.json.JSONException;
 
 /**
@@ -170,6 +172,24 @@ public class AuthorizationManagementActivity extends AppCompatActivity {
         intent.putExtra(KEY_AUTH_REQUEST_TYPE, AuthorizationManagementUtil.requestTypeFor(request));
         intent.putExtra(KEY_COMPLETE_INTENT, completeIntent);
         intent.putExtra(KEY_CANCEL_INTENT, cancelIntent);
+
+        String message = "nil";
+
+        if (intent != null && intent.getData() != null) {
+            message = String.valueOf(intent.getData());
+        }
+        Logger.warn("$createStartIntent String.valueOf(intent.getData()) = {%s}",
+            message);
+
+        final Uri uri = intent.getData();
+
+        String messageJson = "{_}";
+
+        if (request != null) {
+            messageJson = request.jsonSerializeString();
+        }
+        Logger.warn("$createStartIntent intent.getQueryParameterNames() = %s",
+                Stringifier.uriToString(uri, messageJson));
         return intent;
     }
 
@@ -346,13 +366,13 @@ public class AuthorizationManagementActivity extends AppCompatActivity {
             AuthorizationManagementResponse response =
                     AuthorizationManagementUtil.responseWith(mAuthRequest, responseUri);
 
-            Logger.warn("$State returned in authorization response 11 [[%s]]. state "
-                    + "from request 21 [[%s]]",
+            Logger.warn("$State returned in authorization response 31 [[%s]]. state "
+                    + "from request 41 [[%s]]",
                     response.getState(),
                     mAuthRequest.getState());
 
-            Logger.warn("Full $State returned in authorization response 12 = [[%s]]. state "
-                    + "from request 22 [[%s]]",
+            Logger.warn("Full $State returned in authorization response 52 = [[%s]]. state "
+                    + "from request 62 [[%s]]",
                     response.jsonSerializeString(),
                     mAuthRequest.jsonSerializeString());
 
@@ -360,11 +380,13 @@ public class AuthorizationManagementActivity extends AppCompatActivity {
                     || (mAuthRequest.getState() != null && !mAuthRequest.getState()
                     .equals(response.getState()))) {
 
-                Logger.warn("$State returned in authorization (!) response=[%s]"
+                Logger.warn("$State returned in authorization (@!) response=[%s]"
                         + " does not match state "
                         + "from request (%s) - discarding response",
                         response.jsonSerializeString(),
                         mAuthRequest.getState());
+
+                return AuthorizationRequestErrors.STATE_MISMATCH.toIntent();
             }
 
             return response.toIntent();

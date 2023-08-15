@@ -14,8 +14,12 @@
 
 package net.openid.appauth;
 
+import android.net.Uri;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
+
+import net.openid.appauth.internal.Logger;
+import net.openid.appauth.serial.Stringifier;
 
 /**
  * Activity that receives the redirect Uri sent by the OpenID endpoint. It forwards the data
@@ -46,14 +50,22 @@ public class RedirectUriReceiverActivity extends AppCompatActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceBundle) {
+        Logger.warn("$onCreate called");
         super.onCreate(savedInstanceBundle);
 
+        Logger.warn("super $onCreate called in RedirectUriReceiverActivity hash=(%s)",
+            this.hashCode());
+        final Uri uri = getIntent().getData();
+
+        Logger.warn("full $getIntent returned in RedirectUriReceiverActivity (%s) = [[%s]]"
+                + ". state ",
+                Stringifier.uriToString(uri, String.valueOf(this.hashCode())),
+                this.hashCode());
         // while this does not appear to be achieving much, handling the redirect in this way
         // ensures that we can remove the browser tab from the back stack. See the documentation
         // on AuthorizationManagementActivity for more details.
         startActivity(AuthorizationManagementActivity.createResponseHandlingIntent(
-                this, getIntent().getData()));
+                this, uri));
         finish();
     }
-
 }
